@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.1;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -27,6 +27,7 @@ contract Insurance is IInsurance, Ownable {
     }
 
     mapping(uint256 => InsuranceStruct) private insurance;
+    mapping(uint256 => bool) private insurance_payment;
 
     /*
      @event
@@ -182,7 +183,10 @@ contract Insurance is IInsurance, Ownable {
             compareString(insurance[_idInsurance].state, "Available"),
             "State cannot be updated"
         );
-
+        if (!insurance_payment[_idInsurance]) {
+            revert("State cannot be updated");
+        }
+        insurance_payment[_idInsurance] = true;
         insurance[_idInsurance].state = "Canceled";
         insurance[_idInsurance].recognition_date = block.timestamp;
 
@@ -202,9 +206,12 @@ contract Insurance is IInsurance, Ownable {
     ) external override onlyOwner returns (string memory) {
         require(
             compareString(insurance[_idInsurance].state, "Available"),
-            "State cannot be updated"
+            "Invalid error"
         );
-
+        if (!insurance_payment[_idInsurance]) {
+            revert("Invalid error");
+        }
+        insurance_payment[_idInsurance] = true;
         insurance[_idInsurance].state = "Invalid";
         insurance[_idInsurance].recognition_date = block.timestamp;
 
